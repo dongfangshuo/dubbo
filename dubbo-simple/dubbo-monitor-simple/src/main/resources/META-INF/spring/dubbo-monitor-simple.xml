@@ -24,10 +24,35 @@
         <property name="location" value="classpath:dubbo.properties" />
     </bean>
 	
+
+
+	<bean id="redisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxActive" value="${redis.maxActive}"/>
+		<property name="maxIdle" value="${redis.maxIdle}"/>
+		<property name="testOnBorrow" value="true"/>
+		<property name="testOnReturn" value="true"/>
+		<property name="testWhileIdle" value="true"/>
+	</bean>
+
+	<bean id="redisPool" class="redis.clients.jedis.JedisPool" destroy-method="destroy">
+		<constructor-arg index="0" ref="redisPoolConfig"/>
+		<constructor-arg index="1" value="${redis.host}"/>
+		<constructor-arg index="2" value="${redis.port}"/>
+		<constructor-arg index="3" value="${redis.timeout}"/>
+		<constructor-arg index="4" value="${redis.password}"/>
+		<constructor-arg index="5" value="${redis.database}"/>
+	</bean>
+
+	<bean id="redisTemplate" class="com.alibaba.dubbo.monitor.simple.redis.RedisTemplate">
+		<property name="pool" ref="redisPool"/>
+	</bean>
+
 	<bean id="monitorService" class="com.alibaba.dubbo.monitor.simple.SimpleMonitorService">
 		<property name="statisticsDirectory" value="${dubbo.statistics.directory}" />
 		<property name="chartsDirectory" value="${dubbo.charts.directory}" />
+		<property name="redisTemplate" ref="redisTemplate"/>
 	</bean>
+
 	
 	<dubbo:application name="${dubbo.application.name}" owner="${dubbo.application.owner}" />
 	

@@ -39,6 +39,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
+import com.alibaba.dubbo.monitor.simple.redis.RedisTemplate;
+import com.alibaba.dubbo.monitor.simple.redis.UrlData;
+import com.alibaba.fastjson.JSON;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -84,6 +87,10 @@ public class SimpleMonitorService implements MonitorService {
     private String chartsDirectory = "charts";
     
     private volatile boolean running = true;
+
+    private RedisTemplate redisTemplate;
+
+    private final  String  REDIS_KEY = "J_DUBBO_MONITOR_URL";
     
     private static SimpleMonitorService INSTANCE = null;
 
@@ -171,6 +178,8 @@ public class SimpleMonitorService implements MonitorService {
         } else {
             now = new Date(Long.parseLong(timestamp));
         }
+        UrlData urlData = new UrlData();
+        urlData.setTimestamp(now.getTime());
         String day = new SimpleDateFormat("yyyyMMdd").format(now);
         SimpleDateFormat format = new SimpleDateFormat("HHmm");
         for (String key : types) {
@@ -195,6 +204,12 @@ public class SimpleMonitorService implements MonitorService {
                     }
                     provider = statistics.getHost();
                 }
+                urlData.setType(type);
+                urlData.setProvider(provider);
+                urlData.setConsumer(consumer);
+                urlData.setInterfaceKey(statistics.getServiceInterface());
+                urlData.setMethod(statistics.getParameter(METHOD));
+                urlData.add(key,statistics.getParameter(key, 0));
                 String filename = statisticsDirectory 
                         + "/" + day 
                         + "/" + statistics.getServiceInterface() 
@@ -217,6 +232,11 @@ public class SimpleMonitorService implements MonitorService {
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);
             }
+        }
+        try{
+            redisTemplate.rpush(REDIS_KEY,JSON.toJSONString(urlData));
+        }catch (Exception e){
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -432,4 +452,11 @@ public class SimpleMonitorService implements MonitorService {
 		return null;
 	}
 
+    public RedisTemplate getRedisTemplate() {
+        return redisTemplate;
+    }
+
+    public void setRedisTemplate(RedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 }
