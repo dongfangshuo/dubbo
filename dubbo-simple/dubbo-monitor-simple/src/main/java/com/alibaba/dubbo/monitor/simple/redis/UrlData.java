@@ -13,6 +13,7 @@ public class UrlData {
     private Long timestamp;
     private String method;
     private String interfaceKey;
+    private String version;
     private Map<String,Integer> map = new HashMap<String, Integer>();
 
     public String getType() {
@@ -74,5 +75,13 @@ public class UrlData {
 
     public void add(String key, Integer val){
         map.put(key,val);
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

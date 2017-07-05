@@ -210,6 +210,7 @@ public class SimpleMonitorService implements MonitorService {
                 urlData.setInterfaceKey(statistics.getServiceInterface());
                 urlData.setMethod(statistics.getParameter(METHOD));
                 urlData.add(key,statistics.getParameter(key, 0));
+                urlData.setVersion(statistics.getParameter(VERSION));
                 String filename = statisticsDirectory 
                         + "/" + day 
                         + "/" + statistics.getServiceInterface() 
