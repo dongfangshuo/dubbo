@@ -88,6 +88,8 @@ public class SimpleMonitorService implements MonitorService {
     
     private volatile boolean running = true;
 
+    private Boolean isWriteRedis = false;
+
     private RedisTemplate redisTemplate;
 
     private final  String  REDIS_KEY = "J_DUBBO_MONITOR_URL";
@@ -234,7 +236,9 @@ public class SimpleMonitorService implements MonitorService {
             }
         }
         try{
-            redisTemplate.rpush(REDIS_KEY,JSON.toJSONString(urlData));
+            if(isWriteRedis){
+                redisTemplate.rpush(REDIS_KEY,JSON.toJSONString(urlData));
+            }
         }catch (Exception e){
             logger.error(e.getMessage(), e);
         }
@@ -458,5 +462,13 @@ public class SimpleMonitorService implements MonitorService {
 
     public void setRedisTemplate(RedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
+    }
+
+    public Boolean getWriteRedis() {
+        return isWriteRedis;
+    }
+
+    public void setWriteRedis(Boolean writeRedis) {
+        isWriteRedis = writeRedis;
     }
 }

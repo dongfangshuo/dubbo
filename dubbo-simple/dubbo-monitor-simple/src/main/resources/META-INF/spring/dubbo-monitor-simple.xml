@@ -51,6 +51,7 @@
 		<property name="statisticsDirectory" value="${dubbo.statistics.directory}" />
 		<property name="chartsDirectory" value="${dubbo.charts.directory}" />
 		<property name="redisTemplate" ref="redisTemplate"/>
+		<property name="writeRedis" value="${isWriteRedis}"/>
 	</bean>
 
 	
