@@ -515,3 +515,9 @@ function switchToRegistry(r) {
 	url = "http://" + r + url;
 	window.location.href = url;
 }
+
+function echoFun(url) {
+   	$.get(url,function (data) {
+        alert( data);
+    },"html");
+}

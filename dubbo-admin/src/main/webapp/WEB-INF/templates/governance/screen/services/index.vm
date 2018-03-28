@@ -71,6 +71,16 @@
 			#end
 		#end
 	</td>
+	<td>
+		#if($providerServices.contains($service))
+            <button onclick="echoFun('services/0/echo?service=$service');">检测服务</button>
+		#end
+	</td>
+    <td>
+		#if($providerServices.contains($service))
+        <button onclick="showConfirm('确认删除不可用服务', 'services/0/del?service=$service'); return false;">删除服务</button>
+		#end
+    </td>
 	#if($application)
 	<td>
 		#if($consumerServices.contains($service))

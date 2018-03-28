@@ -7,6 +7,7 @@
  */
 package com.alibaba.dubbo.governance.web.governance.module.screen;
 
+import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +17,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.alibaba.citrus.util.StringUtil;
+import com.alibaba.dubbo.common.extension.ExtensionLoader;
+import com.alibaba.dubbo.registry.RegistryService;
+import com.alibaba.dubbo.registry.common.domain.Provider;
+import com.alibaba.dubbo.rpc.Protocol;
+import com.alibaba.dubbo.rpc.ProxyFactory;
+import com.alibaba.dubbo.rpc.RpcException;
+import com.alibaba.dubbo.rpc.service.EchoService;
+import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.dubbo.common.URL;
@@ -28,12 +38,17 @@ import com.alibaba.dubbo.registry.common.domain.Override;
 import com.alibaba.dubbo.registry.common.route.OverrideUtils;
 import com.alibaba.dubbo.registry.common.util.Tool;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Providers. URI: /services/$service/providers /addresses/$address/services /application/$application/services
  * 
  * @author ding.lid
  */
 public class Services extends Restful {
+    private Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+    private ProxyFactory proxy = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+
 
     @Autowired
     private ProviderService providerService;
@@ -43,6 +58,10 @@ public class Services extends Restful {
     
     @Autowired
     private OverrideService overrideService;
+    @Autowired
+    private RegistryService registryService;
+
+
     
     public void index(Map<String, Object> context) {
         String application = (String) context.get("application");
@@ -128,6 +147,58 @@ public class Services extends Restful {
             context.put("consumerServices", newConsumers);
         }
     }
+
+    public void echo(Map<String, Object> context) throws Exception {
+        String services = (String) context.get("service");
+        List<Provider> providers = providerService.findByService(services);
+        List<String> unavailables = new ArrayList<String>();
+        String ok = "ok";
+        for(Provider provider : providers){
+            Map<String, String> map = StringUtils.parseQueryString(provider.getParameters());
+            map.put("service.filter","echo");
+            provider.setParameters(StringUtils.toQueryString(map));
+            Object obj = null;
+            try {
+                EchoService echo = proxy.getProxy(protocol.refer(EchoService.class, provider.toUrl()));
+                obj = echo.$echo(ok);
+            } catch (RpcException e) {
+                unavailables.add(provider.getUrl());
+                continue;
+            }
+            if(!obj.equals(ok)){
+                unavailables.add(provider.getUrl());
+            }
+        }
+        context.put("unavailables",unavailables);
+    }
+
+    public Boolean del(Map<String, Object> context) throws Exception {
+        String services = (String) context.get("service");
+        List<Provider> providers = providerService.findByService(services);
+        List<Provider> unavailables = new ArrayList<Provider>();
+        String ok = "ok";
+        for(Provider provider : providers){
+            Map<String, String> map = StringUtils.parseQueryString(provider.getParameters());
+            map.put("service.filter","echo");
+            provider.setParameters(StringUtils.toQueryString(map));
+            Object obj = null;
+            try {
+                EchoService echo = proxy.getProxy(protocol.refer(EchoService.class, provider.toUrl()));
+                obj = echo.$echo(ok);
+            } catch (RpcException e) {
+                unavailables.add(provider);
+                continue;
+            }
+            if(!obj.equals(ok)){
+                unavailables.add(provider);
+            }
+        }
+        for(Provider provider : unavailables){
+            registryService.unregister(provider.toUrl());
+        }
+        return true;
+    }
+
 
     public boolean shield(Map<String, Object> context) throws Exception {
     	return mock(context, "force:return null");
