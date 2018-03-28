@@ -36,6 +36,8 @@
 	<option value="$i18n.get("ok")">$i18n.get("ok")</option><option value="$i18n.get("no.provider")">$i18n.get("no.provider")</option><option value="$i18n.get("no.consumer")">$i18n.get("no.consumer")</option></select>
 	#end
 	</select></th>
+	<th>检测服务</th>
+	<th>删除服务</th>
 	#if($application)
 	<th width="110">$i18n.get("mock"): <select onchange="searchTable('table_o', 3, this.value);" onclick="searchTable('table_o', 3, this.value);"><option value="">$i18n.get("all")</option><option value="$i18n.get("ok")">$i18n.get("ok")</option><option value="$i18n.get("force.mock")">$i18n.get("force.mock")</option><option value="$i18n.get("fail.mock")">$i18n.get("fail.mock")</option></select></th>
 	<th>$i18n.get("operation")</th>
